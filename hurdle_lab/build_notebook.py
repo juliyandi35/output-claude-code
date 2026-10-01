@@ -185,7 +185,7 @@ ax[0,1].set_title("(b) Nol turun saat api memuncak:\nnol itu MUSIMAN, bukan acak
 # (c) musiman kalender
 mm = pd.DataFrame({"bln": np.repeat(d["month"]+1, n), "y": y})
 box = [mm.y[mm.bln==b].values for b in range(1,13)]
-ax[1,0].boxplot([np.log1p(b) for b in box], labels=range(1,13), showfliers=False)
+ax[1,0].boxplot([np.log1p(b) for b in box], tick_labels=list(range(1,13)), showfliers=False)
 ax[1,0].set_title("(c) Pola musiman: puncak sekitar bulan 8–9 (Agu–Sep)")
 ax[1,0].set_xlabel("bulan kalender"); ax[1,0].set_ylabel("log(1+hitungan)")
 # (d) Lorenz: konsentrasi
@@ -804,6 +804,16 @@ for j, (a, b, ket) in enumerate(pairs):
 ax.axvline(0, c="k"); ax.set_yticks(range(len(pairs))); ax.set_yticklabels([f"{a} vs {b}\n({k})" for a,b,k in pairs]); ax.invert_yaxis()
 ax.set_xlabel("selisih CRPS (positif = model A lebih baik); bar = selang 95% bootstrap blok"); plt.tight_layout(); plt.show()
 display(pd.DataFrame(out).set_index("Perbandingan").round(2))
+""")
+md(r"""
+### 🔎 Membaca hasil simulasi kita dengan jujur (penting!)
+Pada penjalanan data simulasi ini polanya **tidak persis sama** dengan tesis, dan itu justru pelajaran berharga:
+- **Struktur laten jelas membantu**: ZN jauh lebih baik dari GNB (selang bootstrap tidak memuat 0).
+- **Hurdle menang di tempat yang tesis katakan — kalibrasi peluang kejadian**: ECE ZH1 ≈ 0,02 vs ZN ≈ 0,10; AUC/Brier juga sedikit lebih baik.
+- **Tetapi pada CRPS menyeluruh, ZH1 tidak lebih baik dari ZN** (selisih negatif, selang memuat 0), dan **bias total ZH1 sangat besar**: model melebihkan puncak ekstrem. Sebabnya: skala *copy* b‑waktu besar (≈2–3) memperkuat ketidakpastian efek waktu di bulan uji, lalu `exp(η)` membengkakkannya — dan sampel prediktif mengabaikan korelasi antar‑baris (keterbatasan yang SAMA yang diakui tesis di Subbab 3.7.9, dan penyebab RMSE hurdle lebih buruk di tesis).
+- **Jangan menyimpulkan** bahwa "hurdle selalu menang" ataupun "selalu kalah". Nilai tambahnya bergantung pada *data*, *periode uji*, dan *metrik*. Inilah alasan tesis memakai banyak metrik, subset, dan rolling-origin.
+
+> 🧪 Coba: di `simulate()` perbesar perbedaan pengendali kejadian vs jumlah (ubah `beta_z`/`beta_n`), atau gunakan `seed` lain — apakah ZH1 vs ZN berubah arah?
 """)
 md(r"""
 > **Pelajaran dari tesis:** ZH1 vs ZN hanya selisih ≈1,23 CRPS dengan batas bawah selang 0,11 — *"nyata tetapi kecil"*; di 2 dari 3 lipatan rolling-origin selangnya memuat 0. Dan M0s (klimatologi musiman) **tidak terkalahkan** secara signifikan pada tahun uji 2023. Selalu laporkan pembanding sederhana yang kuat.
